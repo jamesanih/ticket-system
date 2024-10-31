@@ -9,16 +9,17 @@ exports.validateInitializeEvent = [
 ];
 
 exports.validateBookTicket = [
-  body('eventId').isInt({ min: 1 }).withMessage('Event ID must be a positive integer'),
-  body('userId').isInt({ min: 1 }).withMessage('User ID must be a positive integer'),
+  body('eventId').notEmpty().withMessage('Event ID is required').isInt({ min: 1 }).withMessage('Event ID must be a positive integer'),
+  // body('userId').isInt({ min: 1 }).withMessage('User ID must be a positive integer'),
+  body('numberOfTickets').notEmpty().withMessage('Number of ticket is required').isInt({gt:0}).withMessage('Number of tickets must be a positive integer')
 ];
 
 exports.validateCancelBooking = [
-  body('bookingId').isInt({ min: 1 }).withMessage('Booking ID must be a positive integer'),
+  body('bookingId').notEmpty().withMessage('Booking ID is required').isInt({ min: 1 }).withMessage('Booking ID must be a positive integer'),
 ];
 
 exports.validateGetEventStatus = [
-  param('eventId').isInt({ min: 1 }).withMessage('Event ID must be a positive integer'),
+  param('eventId').notEmpty().withMessage('Event ID is required').isInt({ min: 1 }).withMessage('Event ID must be a positive integer'),
 ];
 
 exports.validate = (req, res, next) => {
