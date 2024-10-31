@@ -27,14 +27,9 @@ exports.bookTicket = async (req, res) => {
     const { eventId, numberOfTickets } = req.body;
     const userId = req.user.id;
 
-    if (!eventId || !numberOfTickets || numberOfTickets <= 0) {
-      await t.rollback();
-      return res.status(400).json({ error: 'Invalid input' });
-    }
-
-    const event = await Event.findByPk(eventId, { 
+    const event = await Event.findByPk(eventId, {
       lock: t.LOCK.UPDATE,
-      transaction: t 
+      transaction: t,
     });
 
     if (!event) {
@@ -42,20 +37,17 @@ exports.bookTicket = async (req, res) => {
       return res.status(404).json({ error: 'Event not found' });
     }
 
-    if (event.availableTickets < numberOfTickets) {
-      await t.rollback();
-      return res.status(400).json({ error: 'Not enough tickets available' });
+    const bookingStatus = event.availableTickets >= numberOfTickets ? 'booked' : 'waiting';
+
+    const booking = await Booking.create(
+      { userId, eventId, numberOfTickets, status: bookingStatus },
+      { transaction: t }
+    );
+
+    if (bookingStatus === 'booked') {
+      event.availableTickets -= numberOfTickets;
+      await event.save({ transaction: t });
     }
-
-    const booking = await Booking.create({
-      userId,
-      eventId,
-      numberOfTickets,
-      status: 'booked'
-    }, { transaction: t });
-
-    event.availableTickets -= numberOfTickets;
-    await event.save({ transaction: t });
 
     await t.commit();
     res.status(201).json(booking);
